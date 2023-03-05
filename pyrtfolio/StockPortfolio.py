@@ -34,8 +34,8 @@ class StockPortfolio(object):
         they are filled once the class is instanced.
 
         """
-        self._stocks = list()
-        self._stock_objs = list()
+        self._stocks = []
+        self._stock_objs = []
         self.data = None
 
     def add_stock(self, stock_symbol, stock_country, purchase_date, num_of_shares, cost_per_share):
@@ -88,7 +88,7 @@ class StockPortfolio(object):
         stocks = investpy.get_stocks(country=stock.stock_country)
 
         stock_name = stocks.loc[(stocks['symbol'].str.lower() == stock.stock_symbol.lower()).idxmax(), 'name']
-        
+
         data = investpy.get_stock_historical_data(stock=stock.stock_symbol,
                                                   country=stock.stock_country,
                                                   from_date=stock.purchase_date,
@@ -124,7 +124,7 @@ class StockPortfolio(object):
         total_gain_loss_percentage = self.calculate_total_gain_loss_percentage(total_gain_loss=total_gain_loss,
                                                                                purchase_cost=purchase_cost)
 
-        info = {
+        return {
             'stock_symbol': stock.stock_symbol,
             'stock_name': stock_name,
             'stock_country': stock.stock_country,
@@ -141,8 +141,6 @@ class StockPortfolio(object):
             'total_gain_loss_percentage': total_gain_loss_percentage,
         }
 
-        return info
-
     def refresh(self):
         """ Method to refresh/reload the StockPortfolio information.
         
@@ -152,7 +150,7 @@ class StockPortfolio(object):
 
         """
         if len(self._stock_objs) > 0:
-            self._stocks = list()
+            self._stocks = []
             for stock_obj in self._stock_objs:
                 info = self.__get_stock_info(stock=stock_obj)
                 self._stocks.append(info)
@@ -189,10 +187,10 @@ class StockPortfolio(object):
         range that the user owned/owns the stock shares. Each dividend is paid per the number of stock shares hold
         by the user.
         """
-        total_dividends = 0
-        for _, dividend in dividends.iterrows():
-            total_dividends += (dividend['Dividend'] * num_of_shares)
-        return total_dividends
+        return sum(
+            (dividend['Dividend'] * num_of_shares)
+            for _, dividend in dividends.iterrows()
+        )
 
     @staticmethod
     def calculate_net_current_value(gross_current_value, total_dividends):
@@ -216,4 +214,4 @@ class StockPortfolio(object):
         This method compares the stock total gain loss to what the user paid for the stock shares owned and the result
         is a percentage that can show the total stock performance.
         """
-        return str(total_gain_loss / purchase_cost) + "%"
+        return f"{str(total_gain_loss / purchase_cost)}%"
